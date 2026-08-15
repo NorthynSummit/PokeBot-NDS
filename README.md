@@ -40,6 +40,8 @@ This repository does not include ROMs, BIOS files, or copyrighted game data. Use
 
 This fork is based on the original PokéBot NDS project and is being developed as an experimental navigation-engine branch.
 
+## Wyanido:
+
 <img src='https://i.imgur.com/lHaYC4z.png' width='600px'>
 
 This repository is dedicated to creating a multi-purpose automated tool for the mainline DS Pokémon games. The bot can perform most monotonous tasks in these games, with all languages supported.
