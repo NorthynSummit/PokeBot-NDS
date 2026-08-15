@@ -78,6 +78,13 @@ if err then
 end
 
 dashboard:settimeout(0)
+if nav_version then
+    _ROM.custom_build = tostring(nav_version())
+end
+if nav_build_label then
+    _ROM.custom_build_label = tostring(nav_build_label())
+end
+
 dashboard_send({
     type = "load_game",
     data = _ROM

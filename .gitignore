@@ -1,2 +1,25 @@
-node_modules
-user
+# Dependencies
+node_modules/
+dashboard/node_modules/
+
+# Runtime/user data
+user/
+*.log
+latest.log
+previous.log
+
+# Generated / backup files
+*.bak_*
+*.tmp
+*.cache
+
+# Local archives / scratch files
+terrain_scope_v40.zip
+pokebot_scope_*
+folder_tree.txt
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

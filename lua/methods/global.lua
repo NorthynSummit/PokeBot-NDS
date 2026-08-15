@@ -529,8 +529,102 @@ function move_to_fixed(target)
     end
 end
 
---- General script for receiving and checking multiple gift Pokemon types
-function mode_gift()
+--- Gift choice setup.
+--- For your current save/reset point:
+--- false = bot starts standing in front of the NPC and must start the dialogue
+--- true  = bot starts already on the Turtwig/Chimchar/Piplup choice menu
+local GIFT_STARTS_ON_CHOICE_MENU = false
+
+--- How many A presses after starting dialogue before the choice menu appears.
+--- If it still picks Turtwig, this number is probably too high or timing is wrong.
+--- If it never reaches the starter menu, increase it by 1.w
+
+--- Wait between dialogue A presses.
+local GIFT_PRE_CHOICE_WAIT_FRAMES = 45
+
+--- Gets the target Pokemon name from config.
+function get_target_name()
+    if not config.target_traits or not config.target_traits.name then
+        return nil
+    end
+
+    local target_name = config.target_traits.name
+
+    -- If target name is a list, use the first one.
+    if type(target_name) == "table" then
+        target_name = target_name[1]
+    end
+
+    return target_name
+end
+
+--- Advances dialogue until the gift choice menu should be open.
+function advance_to_gift_choice_menu()
+    if GIFT_STARTS_ON_CHOICE_MENU then
+        wait_frames(30)
+        return
+    end
+
+    print("Starting gift dialogue...")
+
+    -- Start talking to the NPC.
+    press_button("A")
+    wait_frames(60)
+
+    -- Advance dialogue, but stop before selecting the first menu option.
+    for i = 1, GIFT_PRE_CHOICE_A_PRESSES do
+        press_button("A")
+        wait_frames(GIFT_PRE_CHOICE_WAIT_FRAMES)
+    end
+
+    wait_frames(30)
+end
+
+--- Chooses from gift menus that have multiple Pokemon options.
+--- This is mainly for Drayano-style starter quiz gifts.
+function choose_gift_option_by_target()
+    local target_name = get_target_name()
+
+    if not target_name then
+        return false
+    end
+
+    -- Sinnoh starter quiz order:
+    -- 1. Turtwig
+    -- 2. Chimchar
+    -- 3. Piplup
+    local gift_choices = {
+        ["Turtwig"] = {},
+        ["Chimchar"] = {"Down"},
+        ["Piplup"] = {"Down", "Down"}
+    }
+
+    local inputs = gift_choices[target_name]
+
+    if not inputs then
+        return false
+    end
+
+    print("Preparing to choose gift option for " .. target_name .. "...")
+
+    advance_to_gift_choice_menu()
+
+    print("Choosing gift option for " .. target_name .. "...")
+
+    for _, button in ipairs(inputs) do
+        press_button(button)
+        wait_frames(12)
+    end
+
+    press_button("A")
+    wait_frames(60)
+
+    return true
+end
+
+--- Waits until the save file is actually loaded and the party count is stable.
+--- This fixes timing issues when starting the bot from the title/main menu.
+function wait_until_game_fully_ready()
     if not game_state.in_game then
         print("Waiting to reach overworld...")
 
@@ -539,7 +633,39 @@ function mode_gift()
         end
     end
 
+    print("Waiting for game state to stabilize...")
+
+    local last_party_count = -1
+    local stable_frames = 0
+    local timeout = 0
+
+    while stable_frames < 60 and timeout < 600 do
+        local current_party_count = #party
+
+        if current_party_count > 0 and current_party_count == last_party_count then
+            stable_frames = stable_frames + 1
+        else
+            stable_frames = 0
+            last_party_count = current_party_count
+        end
+
+        wait_frames(1)
+        timeout = timeout + 1
+    end
+
+    -- Extra safety buffer after loading from title/menu.
+    wait_frames(90)
+end
+
+--- General script for receiving and checking multiple gift Pokemon types
+function mode_gift()
+    wait_until_game_fully_ready()
+
     local og_party_count = #party
+
+    -- If the gift has a choice menu and the target is known, choose the matching option.
+    choose_gift_option_by_target()
+
     while #party == og_party_count do
         progress_text()
     end
@@ -603,3 +729,23 @@ function progress_text()
     release_button("A")
     wait_frames(5)
 end
+
+-----------------------------------------------------------------------------
+-- Custom navigation modules
+-- Keep global.lua small; load navigation systems from lua\methods\nav.
+-- The bot mode dispatcher still looks for global mode_* functions.
+-----------------------------------------------------------------------------
+
+dofile("lua\\methods\\nav\\nav_version.lua")
+dofile("lua\\methods\\nav\\nav_log.lua")
+dofile("lua\\methods\\nav\\nav_route.lua")
+dofile("lua\\methods\\nav\\nav_map_nodes.lua")
+dofile("lua\\methods\\nav\\nav_probe.lua")
+dofile("lua\\methods\\nav\\nav_scan_sweep.lua")
+dofile("lua\\methods\\nav\\nav_graph.lua")
+dofile("lua\\methods\\nav\\nav_frontier.lua")
+dofile("lua\\methods\\nav\\nav_terrain.lua")
+dofile("lua\\methods\\nav\\nav_storage.lua")
+dofile("lua\\methods\\nav\\nav_cleanup.lua")
+dofile("lua\\methods\\nav\\nav_planner.lua")
+dofile("lua\\methods\\nav\\nav_explore.lua")

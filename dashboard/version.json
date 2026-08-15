@@ -1,0 +1,9 @@
+{
+  "build": "v40.10",
+  "name": "Capability Engine + Clean Map Workflow",
+  "base": "v40.9 Lens Hotfix + Party Keepalive",
+  "date": "2026-07-03",
+  "requiresLua": "v40.10",
+  "authority": "lua/methods/nav/nav_version.lua",
+  "notes": "Compact mapper intelligence pack: adds tile capability engine, scan lens dashboard data, safe map archive/reset workflow, map-pack architecture status, stronger party snapshot rendering, and dynamic-blockage-safe movement classification."
+}

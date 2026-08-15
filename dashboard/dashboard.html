@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéBot NDS</title>
+    <title>PokéBot NDS — v39.2</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Halfmoon/1.0.4/css/halfmoon-variables.css" integrity="sha512-ua2VFI0tK7cQQ5b8xPt8djKW8osl0nwnhgh28hfgYWYlUatSZuVWtsB0sRBM9dwN2Gbcz+YBgrFxW/+7J5Lvew==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-templates@1.0.0/jquery.tmpl.min.js" integrity="sha256-EX43U5s1k9lc6mJ7GoHd3EDBqssRp3x/bBxccLTV99o=" crossorigin="anonymous"></script>
@@ -106,187 +106,183 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="with-custom-webkit-scrollbars with-custom-css-scrollbars" data-dm-shortcut-enabled="true"
-    data-set-preferred-mode-onload="true">
+<body class="with-custom-webkit-scrollbars with-custom-css-scrollbars pb-dashboard-page pb-dashboard-v5 pb-dashboard-v6" data-dm-shortcut-enabled="true" data-set-preferred-mode-onload="true">
     <div class="page-wrapper with-navbar">
         <div class="sticky-alerts"></div>
         <header-component></header-component>
-        <div class="content-wrapper">
-            <div class="row row-eq-spacing">
-                <div class="col-8">
-                    <div class="card p-0 m-0">
-                        <div id="game-buttons" class="btn-group w-full d-flex" role="group"></div>
-                        <div id="game-party"></div>
-                        <div id="game-info"></div>
-                    </div>
+        <main class="content-wrapper pb-shell pb50-dashboard-shell">
+            <section class="pb50-command-strip" aria-label="Current bot state">
+                <div class="pb50-command-primary">
+                    <span class="pb-eyebrow">Command Center</span>
+                    <h1>PokéBot NDS</h1>
+                    <p id="mission-objective">Load pokebot-nds.lua or choose a task in Config to prepare the bot.</p>
                 </div>
-                <div class="col-4">
-                    <div class="card m-0 p-20">
-                        <div class="row">
-                            <h2 class="card-title text-center w-full">Total</h2>
-                            <table class="table">
-                                <tr class="col-6">
-                                    <th class="col-6">Seen</th>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <i class="fa-solid fa-eye"></i>
-                                            <span id="total-seen"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th class="col-6">Shiny</th>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <i class="fa-solid fa-star"></i>
-                                            <span id="total-shiny"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th class="col-6">IVs</th>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <i class="fa fa-arrow-circle-up"></i>
-                                            <span id="total-max-iv"></span>
-                                        </div>
-                                        <div class="text-nowrap">
-                                            <i class="fa fa-arrow-circle-down"></i>
-                                            <span id="total-min-iv"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            <h2 class="card-title text-center w-full">Phase</h2>
-                            <table class="table">
-                                <tr>
-                                    <th class="col-6">Seen</th>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <i class="fa-solid fa-eye"></i>
-                                            <span id="phase-seen"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="col-6">
-                                    <th>Lowest SV</th>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            <i class="fa fa-arrow-circle-down"></i>
-                                            <span id="phase-lowest-sv"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="col-6">
-                                    <th class="text-nowrap">Target Odds
-                                        <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                        <div id="tooltip" role="tooltip" style="font-weight: normal; text-align: left; text-wrap: wrap;">
-                                            Binomial distribution calculator B(n,p)<br><br>
-                                            For odds 1/<i>n</i>, the % represents the cumulative chance to
-                                            have encountered a target Pokémon within a 'seen' number of trials. In
-                                            most cases, <i>n</i> represents the current shiny odds.
-                                            <div id="arrow" data-popper-arrow></div>
-                                        </div>
-                                        <div class="input-group mt-10" style="width: 70px; height: 28px;">
-                                            <label class="input-group-text p-5">1/</label>
-                                            <input class="form-control h-full p-5" id="shiny-rate" min="1" value="8192">
-                                        </div>
-                                    </th>
-                                    <td id="bnp"></td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
+                <div class="pb50-command-status">
+                    <div class="pb50-status-item strong"><span>Connection</span><strong id="home-connection">Waiting for Lua</strong><small id="home-client-count">0 clients connected</small></div>
+                    <div class="pb50-status-item"><span>Bot state</span><strong id="mission-state">Waiting</strong><small id="home-debug-mode">Clean user log enabled</small></div>
+                    <div class="pb50-status-item task-status"><span>Task</span><strong id="home-task">Not loaded</strong><small id="home-task-detail">Choose a task in Config</small></div>
+                    <div class="pb50-status-item"><span>Session</span><strong id="elapsed-time-inline">0s</strong><small><span id="home-rate-inline">0/h</span> · <span id="home-area">Unknown area</span></small></div>
                 </div>
-            </div>
-            <div class="card row-eq-spacing p-20">
-                <div class="text-center" style="flex-direction: row; height: 50px;">
-                    <h2 style="position:absolute" class="card-title text-center w-full">Recently Seen
-                        <div id="warn-duplicate" style="display: inline-block; visibility: hidden;">        
-                            <i class="fa fa-exclamation-triangle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                            <div id="tooltip" role="tooltip" style="font-weight: normal; text-align: left;">
-                                This list contains duplicate PIDs. The bot may not be running at 100% efficiency.
-                                <div id="arrow" data-popper-arrow></div>
+                <div class="pb50-command-actions">
+                    <a class="pb-btn pb-btn-primary" href="config.html#settings-task"><i class="fa fa-sliders"></i> Configure</a>
+                    <button class="pb-btn pb-btn-secondary" id="open-full-log" type="button"><i class="fa fa-terminal"></i> View Log</button>
+                </div>
+            </section>
+
+            <section class="pb50-layout">
+                <div class="pb50-main">
+                    <article class="pb50-panel pb50-mission-panel">
+                        <header class="pb50-panel-head">
+                            <div>
+                                <span class="pb-eyebrow">Active Mission</span>
+                                <h2 id="mission-task-title">No active mission yet</h2>
+                            </div>
+                            <a class="pb50-link" href="config.html#settings-task">Change task</a>
+                        </header>
+                        <div class="pb50-mission-grid">
+                            <div class="pb50-next-step">
+                                <span>Recommended next step</span>
+                                <strong id="mission-next-step">Open Config, choose a task, then load the Lua script in the emulator.</strong>
+                            </div>
+                            <div class="pb50-checklist" id="mission-checklist" aria-label="Mission requirements">
+                                <div class="pending"><i class="fa fa-circle"></i><span>Dashboard server running</span></div>
+                                <div class="pending"><i class="fa fa-circle"></i><span>Lua script loaded</span></div>
+                                <div class="pending"><i class="fa fa-circle"></i><span>Game data received</span></div>
+                                <div class="pending"><i class="fa fa-circle"></i><span>Task configuration ready</span></div>
                             </div>
                         </div>
-                    </h2>
-                    <div class="input-group" style="width: 150px; height: 28px; float: right;">
-                        <label class="input-group-text">Show latest</label>
-                        <input class="form-control h-full" id="recents-limit" min="1" type="number" value="5">
-                    </div>
+                    </article>
+
+                    <article class="pb50-panel pb50-setup-panel">
+                        <header class="pb50-panel-head">
+                            <div><span class="pb-eyebrow">Current Setup</span><h2>Active configuration summary</h2></div>
+                            <div class="pb50-link-row"><a href="config.html#settings-targets">Targets</a><a href="config.html#settings-navigation">Navigation</a><a href="config.html#settings-battles">Battles</a></div>
+                        </header>
+                        <div class="pb50-setup-grid">
+                            <div id="target-summary-list" class="pb50-summary-list">
+                                <div><span>Targets</span><strong>Loading…</strong></div>
+                                <div><span>Shiny safety</span><strong>Loading…</strong></div>
+                                <div><span>Auto-catch</span><strong>Loading…</strong></div>
+                                <div><span>Battle policy</span><strong>Loading…</strong></div>
+                            </div>
+                            <div class="pb50-summary-list">
+                                <div><span>Area</span><strong id="map-status-area">Unknown</strong></div>
+                                <div><span>Position</span><strong id="map-status-position">No tile data</strong></div>
+                                <div><span>Planner</span><strong id="map-status-planner">Coverage Planner v1</strong></div>
+                                <div><span>Storage</span><strong id="map-status-storage">Checking…</strong></div>
+                                <div><span>Coverage</span><strong id="map-status-coverage">Not checked</strong></div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="pb50-panel pb50-live-panel" id="game-panel">
+                        <header class="pb50-panel-head">
+                            <div><span class="pb-eyebrow">Live Game</span><h2>Connected emulator data</h2></div>
+                            <div id="game-buttons" class="pb-game-tabs btn-group" role="group"></div>
+                        </header>
+                        <div class="pb50-empty-state pb50-live-empty" id="connection-empty-state">
+                            <div>
+                                <h3>Waiting for emulator data</h3>
+                                <p>Load <code>pokebot-nds.lua</code> in DeSmuME, let the dashboard receive game data, then run or monitor the selected task.</p>
+                            </div>
+                            <ol class="pb50-live-checklist">
+                                <li class="ready">Dashboard server running</li>
+                                <li>Load <code>pokebot-nds.lua</code> in emulator</li>
+                                <li>Let game data reach the dashboard</li>
+                                <li>Run the selected task</li>
+                            </ol>
+                        </div>
+                        <div class="pb-game-content">
+                            <div id="game-party" class="pb-party-strip"></div>
+                            <div id="game-info" class="pb-game-info"></div>
+                        </div>
+                    </article>
                 </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th class="text-center">PID</th>
-                            <th class="text-center">Shiny Value</th>
-                            <th class="text-center">Ability</th>
-                            <th class="text-center">Nature</th>
-                            <th class="text-center">IVs
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip" style="font-weight: normal; text-align: left;">
-                                    Stats are listed in the following order:<br>
-                                    HP, Attack, Defense, Sp. Atk, Sp. Def, Speed<br><br>
-                                    Stats in Red are raised by the nature.<br>
-                                    Stats in Blue are lowered by the nature.<br><br>
-                                    IV Total is listed at the end (186 Max.)
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </th>
-                            <th class="text-center">Hidden Power</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recents">
-                    </tbody>
-                </table>
-            </div>
-            <div class="card row-eq-spacing p-20">
-                <div class="text-center" style="flex-direction: row; height: 50px;">
-                    <h2 style="position:absolute" class="card-title text-center w-full">Recent Targets</h2>
-                    <div class="input-group" style="width: 150px; height: 28px; float: right;">
-                        <label class="input-group-text">Show latest</label>
-                        <input class="form-control h-full" id="targets-limit" min="1" type="number" value="5">
+
+                <aside class="pb50-side">
+                    <article class="pb50-panel pb50-alerts-panel">
+                        <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">Needs Attention</span><h2>Alerts</h2></div></header>
+                        <div id="attention-list" class="pb50-alert-list"><div class="ok">No immediate attention items detected.</div></div>
+                    </article>
+
+                    <article class="pb50-panel pb50-stats-panel">
+                        <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">Session Progress</span><h2>Stats</h2></div></header>
+                        <div class="pb50-stat-table">
+                            <div><span>Total seen</span><strong id="total-seen">—</strong></div>
+                            <div><span>Shiny</span><strong id="total-shiny">—</strong></div>
+                            <div><span>Phase seen</span><strong id="phase-seen">—</strong></div>
+                            <div><span>Lowest SV</span><strong id="phase-lowest-sv">—</strong></div>
+                            <div><span>Max IV sum</span><strong id="total-max-iv">—</strong></div>
+                            <div><span>Min IV sum</span><strong id="total-min-iv">—</strong></div>
+                        </div>
+                        <div class="pb50-odds-row"><div><span>Target odds</span><strong id="bnp">—</strong></div><label><span>Rate 1/</span><input class="form-control" id="shiny-rate" min="1" value="8192"></label></div>
+                    </article>
+
+                    <article class="pb50-panel pb50-log-preview" id="logs">
+                        <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">Log Preview</span><h2>Runtime log</h2><p id="lua-log-mode-help">Clean user log preview.</p></div></header>
+                        <div class="pb50-log-toolbar simple"><button class="pb-btn pb-btn-primary" id="open-full-log-secondary" type="button"><i class="fa fa-up-right-from-square"></i> Open full log</button><button class="pb-btn pb-btn-subtle" id="copy-lua-log" type="button"><i class="fa fa-copy"></i> Copy preview</button></div>
+                        <div class="pb50-log-meta compact"><span id="lua-log-count">0 lines</span><span id="lua-log-mode">User Log</span><span id="lua-build-version" class="sr-only">Build loading…</span><span id="lua-log-retention" class="sr-only">latest + previous</span><span id="lua-log-path" class="sr-only">user\logs\latest.log</span></div>
+                        <pre id="lua-log-output" class="lua-log-output compact">Waiting for Lua log messages...</pre>
+                    </article>
+                </aside>
+            </section>
+
+            <section class="pb50-history-grid">
+                <article class="pb50-panel pb-table-panel">
+                    <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">History</span><h2>Recently Seen</h2></div><div class="pb-table-tools"><div id="warn-duplicate" class="pb-duplicate-warning">Duplicate PIDs</div><label class="pb-inline-field">Rows <input class="form-control" id="recents-limit" min="1" type="number" value="8"></label></div></header>
+                    <div class="pb-table-scroll"><table class="table pb-data-table"><thead><tr><th>Pokémon</th><th></th><th>Level</th><th class="text-center">PID</th><th class="text-center">Shiny Value</th><th class="text-center">Ability</th><th class="text-center">Nature</th><th class="text-center">IVs</th><th class="text-center">Hidden Power</th></tr></thead><tbody id="recents"></tbody></table></div>
+                </article>
+                <article class="pb50-panel pb-table-panel">
+                    <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">Target History</span><h2>Recent Targets</h2></div><label class="pb-inline-field">Rows <input class="form-control" id="targets-limit" min="1" type="number" value="8"></label></header>
+                    <div class="pb-table-scroll"><table class="table pb-data-table"><thead><tr><th>Pokémon</th><th></th><th>Level</th><th class="text-center">PID</th><th class="text-center">Shiny Value</th><th class="text-center">Ability</th><th class="text-center">Nature</th><th class="text-center">IVs</th><th class="text-center">Hidden Power</th></tr></thead><tbody id="targets"></tbody></table></div>
+                </article>
+            </section>
+
+            <section class="pb50-activity-row" id="activity-section">
+                <article class="pb50-panel pb50-timeline-panel">
+                    <header class="pb50-panel-head compact"><div><span class="pb-eyebrow">Activity Timeline</span><h2>Recent bot activity</h2></div></header>
+                    <div id="activity-timeline" class="pb50-timeline"><div class="muted">Waiting for runtime activity…</div></div>
+                </article>
+            </section>
+
+            <div class="pb50-log-drawer" id="log-drawer" aria-hidden="true">
+                <div class="pb50-log-drawer-panel">
+                    <header class="pb50-log-drawer-head">
+                        <div><span class="pb-eyebrow">Runtime Log</span><h2 id="full-log-title">Full log viewer</h2><p id="full-log-subtitle">Large readable log area for normal or developer output.</p></div>
+                        <button class="pb-btn pb-btn-subtle" id="close-full-log" type="button"><i class="fa fa-xmark"></i> Close</button>
+                    </header>
+                    <div class="pb50-log-viewer-meta" aria-label="Log details">
+                        <span><b>Source</b> <em id="full-log-source-label">latest.log</em></span>
+                        <span><b>Mode</b> <em id="full-log-mode-label">User Log</em></span>
+                        <span><b>Build</b> <em id="full-log-build-label">v38.8</em></span>
+                        <span><b>Session</b> <em id="full-log-session-label">Waiting</em></span>
                     </div>
+                    <div class="pb50-log-drawer-toolbar viewer grouped">
+                        <div class="pb-log-control-group pb-log-view-group">
+                            <span class="pb-log-group-title">View</span>
+                            <label class="pb2-field compact" for="full-log-source"><span>Log source</span><select class="form-control" id="full-log-source"><option value="full">Full displayed</option><option value="latest">Latest log</option><option value="previous">Previous log</option></select></label>
+                            <label class="pb2-field compact grow" for="full-log-search"><span>Search / filter</span><input class="form-control" id="full-log-search" type="search" placeholder="Filter visible log lines…"></label>
+                            <button class="pb-btn pb-btn-subtle" id="toggle-wrap-log" type="button">Wrap: Off</button>
+                            <button class="pb-btn pb-btn-subtle" id="toggle-autoscroll-log" type="button">Auto-scroll: On</button>
+                        </div>
+                        <div class="pb-log-control-group pb-log-action-group">
+                            <span class="pb-log-group-title">Actions</span>
+                            <button class="pb-btn pb-btn-secondary" id="copy-full-log" type="button"><i class="fa fa-copy"></i> Copy displayed</button>
+                            <button class="pb-btn pb-btn-subtle" id="download-full-log" type="button">Download displayed</button>
+                            <button class="pb-btn pb-btn-danger subtle-danger" id="clear-full-log" type="button">Clear log</button>
+                        </div>
+                    </div>
+                    <div class="pb50-log-results"><span id="full-log-line-count">0 lines</span><span id="full-log-filter-state">No filter</span></div>
+                    <pre id="full-log-output" class="lua-log-output full">Waiting for Lua log messages...</pre>
                 </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th class="text-center">PID</th>
-                            <th class="text-center">Shiny Value</th>
-                            <th class="text-center">Ability</th>
-                            <th class="text-center">Nature</th>
-                            <th class="text-center">IVs
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip" style="font-weight: normal; text-align: left;">
-                                    Stats are listed in the following order:<br>
-                                    HP, Attack, Defense, Sp. Atk, Sp. Def, Speed<br><br>
-                                    Stats in Red are raised by the nature.<br>
-                                    Stats in Blue are lowered by the nature.<br><br>
-                                    IV Total is listed at the end (186 Max.)
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </th>
-                            <th class="text-center">Hidden Power</th>
-                        </tr>
-                    </thead>
-                    <tbody id="targets">
-                    </tbody>
-                </table>
             </div>
-        </div>
+        </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFNtR3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Halfmoon/1.0.4/js/halfmoon.min.js" integrity="sha512-R9gvwJKiTgw9ADz34UDXGetxd4zmcAfGWB7IKO05p79bliXyQ7Nd2PMYmxSF48pmVvj7RJNp8WXtJHF/ZRm3KA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="js/tooltip.js"></script>
-    <script src="js/page.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/tooltip.js?v=39.2"></script>
+    <script src="js/page.js?v=39.2"></script>
+    <script src="js/dashboard.js?v=39.2"></script>
 </body>
-
 </html>

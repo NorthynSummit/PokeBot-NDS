@@ -1,6 +1,8 @@
 const net = require('net');
 const fs = require('fs');
 const { AttachmentBuilder, EmbedBuilder, WebhookClient, ButtonBuilder, ButtonStyle } = require('discord.js');
+const navStore = require('./nav_store');
+const logStore = require('./log_store');
 const port = 51055;
 
 var clients = [];
@@ -24,6 +26,25 @@ const configTemplate = {
     starter1: true,
     starter2: true,
     move_direction: "horizontal",
+    route_name: "goldenrod_test",
+    route_start: "goldenrod_pc",
+    route_destination: "route34_grass",
+    route_reverse: false,
+    route_compress: true,
+    map_node_name: "route34_grass",
+    map_destination: "route34_grass",
+    map_probe_direction: "Up",
+    map_probe_benchmark_test: "move_only_abort",
+    map_explore_area_actions: "5",
+    map_explore_strategy: "coverage_planner",
+    map_explore_battle_policy: "original_encounter_flow",
+    map_explore_continue_after_battle: true,
+    map_explore_flee_timeout_frames: "1800",
+    nav_storage_enabled: true,
+    nav_cleanup_direction: "All",
+    nav_cleanup_scope: "blocked",
+    nav_cleanup_radius_tiles: "0",
+    nav_cleanup_rebuild_graph: true,
     target_traits: {
         ivSum: 180
     },
@@ -59,6 +80,9 @@ const configTemplate = {
     target_log_limit: "30",
     subdue_target: false,
     debug: false,
+    nav_developer_mode: false,
+    nav_show_advanced_modes: false,
+    perf_debug: false,
     webhook_url: "",
     webhook_enabled: false,
     ping_user: false,
@@ -107,6 +131,7 @@ var recents = readJSONFromFile('../user/encounters.json', []);
 var targets = readJSONFromFile('../user/target_log.json', []);
 var config = readJSONFromFile('../user/config.json', configTemplate);
 var stats = readJSONFromFile('../user/stats.json', statsTemplate);
+var lastGameSnapshot = readJSONFromFile('../user/last_party_snapshot.json', null);
 
 // Update stats and config with values not included in previous versions
 objectSubstitute(stats, statsTemplate, true)
@@ -120,59 +145,63 @@ process.on('uncaughtException', function (err) {
 });
 
 if (config.show_status) {
-    DiscordRPC = require('discord-rich-presence')('1140996615784636446');
+    let DiscordRPC = null;
 
-    DiscordRPC.on('error', (reason, _promise) => {
-        console.error(`Discord RPC ${reason}`);
-    });
+    try {
+        DiscordRPC = require('discord-rich-presence')('1140996615784636446');
+    } catch (err) {
+        console.warn('[dashboard] Discord Rich Presence is optional and is not installed. Continuing without Discord status.');
+        DiscordRPC = null;
+    }
 
-    DiscordRPC.on('connected', (_status) => {
-        setInterval(() => {
-            // Default status
-            let status = {
-                state: 'Idle',
-                details: 'No games connected',
-                largeImageKey: 'none',
-                startTimestamp: null,
-                instance: false,
-                buttons: [new ButtonBuilder()
-                    .setLabel('View on GitHub')
-                    .setURL('https://github.com/wyanido/pokebot-nds')
-                    .setStyle(ButtonStyle.Link)
-                ]
-            }
+    if (DiscordRPC) {
+        DiscordRPC.on('error', (reason, _promise) => {
+            console.error(`Discord RPC ${reason}`);
+        });
 
-            if (clientData.length > 0 && clientData[0] != undefined) {
-                const version = clientData[0].version;
-                if (!version) return;
-
-                let icon;
-
-                switch (version) {
-                    case 'D': icon = "diamond"; break;
-                    case 'P': icon = "pearl"; break;
-                    case 'PL': icon = "platinum"; break;
-                    case 'HG': icon = "heartgold"; break;
-                    case 'SS': icon = "soulsilver"; break;
-                    case 'B': icon = "black"; break;
-                    case 'W': icon = "white"; break;
-                    case 'B2': icon = "black2"; break;
-                    case 'W2': icon = "white2"; break;
+        DiscordRPC.on('connected', (_status) => {
+            setInterval(() => {
+                // Default status
+                let status = {
+                    state: 'Idle',
+                    details: 'No games connected',
+                    largeImageKey: 'none',
+                    startTimestamp: null,
+                    instance: false
                 }
 
-                const location = clientData[0].map_name;
-                const moreGames = (clients.length > 1) ? `+ ${clientData.length - 1} game(s)` : ''
+                if (clientData.length > 0 && clientData[0] != undefined) {
+                    const version = clientData[0].version;
+                    if (!version) return;
 
-                status.largeImageKey = icon;
-                status.details = `📍${location} ${moreGames}`;
-                status.state = `${stats.total.seen} seen (${stats.total.shiny}✨) at ${encounterRate}/h`;
-                status.startTimestamp = elapsedStart;
-            }
+                    let icon;
 
-            DiscordRPC.updatePresence(status);
-        }, 2500)
+                    switch (version) {
+                        case 'D': icon = "diamond"; break;
+                        case 'P': icon = "pearl"; break;
+                        case 'PL': icon = "platinum"; break;
+                        case 'HG': icon = "heartgold"; break;
+                        case 'SS': icon = "soulsilver"; break;
+                        case 'B': icon = "black"; break;
+                        case 'W': icon = "white"; break;
+                        case 'B2': icon = "black2"; break;
+                        case 'W2': icon = "white2"; break;
+                    }
+
+                    const location = clientData[0].map_name;
+                    const moreGames = (clients.length > 1) ? `+ ${clientData.length - 1} game(s)` : ''
+
+                    status.largeImageKey = icon;
+                    status.details = `📍${location} ${moreGames}`;
+                    status.state = `${stats.total.seen} seen (${stats.total.shiny}✨) at ${encounterRate}/h`;
+                    status.startTimestamp = elapsedStart;
+                }
+
+                DiscordRPC.updatePresence(status);
+            }, 2500)
+        }
+        );
     }
-    );
 }
 
 function getTimestamp() {
@@ -234,6 +263,7 @@ function killSocket(socket) {
     const index = clients.indexOf(socket);
 
     if (index > -1) {
+        rememberGameSnapshot(clientData[index], 'socket_disconnect');
         clients.splice(index, 1);
         clientData.splice(index, 1);
     }
@@ -277,6 +307,69 @@ function readJSONFromFile(filePath, defaultValue) {
     }
 }
 
+
+function hasPartyData(client) {
+    return !!(client && Array.isArray(client.party) && client.party.length > 0);
+}
+
+function snapshotPartyForClient(client) {
+    if (hasPartyData(client)) return client.party;
+    if (lastGameSnapshot && Array.isArray(lastGameSnapshot.party) && lastGameSnapshot.party.length > 0) {
+        // Keep the last valid party alive across short one-action scripts and game_state-only refreshes.
+        return lastGameSnapshot.party;
+    }
+    return null;
+}
+
+function buildGameSnapshot(client, source) {
+    if (!client) return null;
+
+    const party = snapshotPartyForClient(client);
+    if (!Array.isArray(party) || party.length === 0) return null;
+
+    const shownValues = Object.assign({}, (lastGameSnapshot && lastGameSnapshot.shownValues) || {}, client.shownValues || {});
+    if (!shownValues.Name && client.trainer_name) shownValues.Name = client.trainer_name;
+    if (!shownValues.Map && client.map_name) shownValues.Map = client.map_name;
+    if (!shownValues.Position && client.position) shownValues.Position = client.position;
+
+    return {
+        cached: true,
+        source: source || 'dashboard_socket',
+        cached_at: new Date().toISOString(),
+        gen: client.gen || (lastGameSnapshot && lastGameSnapshot.gen),
+        version: client.version || (lastGameSnapshot && lastGameSnapshot.version) || 'Unknown',
+        custom_build: client.custom_build || (lastGameSnapshot && lastGameSnapshot.custom_build),
+        custom_build_label: client.custom_build_label || (lastGameSnapshot && lastGameSnapshot.custom_build_label),
+        trainer_name: client.trainer_name || shownValues.Name || (lastGameSnapshot && lastGameSnapshot.trainer_name) || 'Last known party',
+        trainer_id: client.trainer_id || shownValues['Trainer ID'] || (lastGameSnapshot && lastGameSnapshot.trainer_id) || '--',
+        map_name: client.map_name || shownValues.Map || (lastGameSnapshot && lastGameSnapshot.map_name) || '',
+        map_header: client.map_header || (lastGameSnapshot && lastGameSnapshot.map_header),
+        position: client.position || shownValues.Position || (lastGameSnapshot && lastGameSnapshot.position) || '',
+        x: client.x !== undefined ? client.x : (lastGameSnapshot && lastGameSnapshot.x),
+        y: client.y !== undefined ? client.y : (lastGameSnapshot && lastGameSnapshot.y),
+        z: client.z !== undefined ? client.z : (lastGameSnapshot && lastGameSnapshot.z),
+        shownValues,
+        party
+    };
+}
+
+function rememberGameSnapshot(client, source) {
+    const snapshot = buildGameSnapshot(client, source);
+    if (!snapshot) return lastGameSnapshot;
+    lastGameSnapshot = snapshot;
+    try {
+        writeJSONToFile('../user/last_party_snapshot.json', lastGameSnapshot);
+    } catch (err) {
+        console.error('Error writing last_party_snapshot.json: ' + err.message);
+    }
+    return lastGameSnapshot;
+}
+
+function ensureClientRecord(index) {
+    if (!clientData[index]) clientData[index] = {};
+    return clientData[index];
+}
+
 function updateEncounterRate() {
     var now = Date.now() / 1000
     sinceLastEncounter = now - lastEncounter
@@ -298,7 +391,28 @@ function updateEncounterRate() {
     lastEncounter = now
 }
 
+function isDuplicateRecentEncounter(mon) {
+    if (!mon || !mon.pid) return false;
+
+    // Navigation now bridges through the original encounter flow. This guard
+    // prevents accidental double-counting if a future nav visibility fallback
+    // sends the same encounter more than once.
+    const last = recents[recents.length - 1];
+    if (!last || !last.pid) return false;
+
+    return String(last.pid) === String(mon.pid);
+}
+
 function updateEncounterLog(mon, client) {
+    if (isDuplicateRecentEncounter(mon)) {
+        logStore.recordLuaLog({
+            level: 'info',
+            category: 'encounter',
+            message: `Skipped duplicate encounter log for PID ${mon.pid}.`
+        }, client || {});
+        return;
+    }
+
     recents.push(mon);
     recents.splice(0, recents.length - config.encounter_log_limit);
 
@@ -434,7 +548,7 @@ function webhookTest(url) {
 
 function interpretClientMessage(socket, message) {
     const index = clients.indexOf(socket);
-    let client = clientData[index];
+    let client = ensureClientRecord(index);
     let data = message.data;
 
     switch (message.type) {
@@ -464,15 +578,18 @@ function interpretClientMessage(socket, message) {
             writeJSONToFile('../user/stats.json', stats);
             break;
         case 'party':
-            client.party = data;
+            client.party = Array.isArray(data) ? data : [];
+            rememberGameSnapshot(client, 'party_update');
             break;
         case 'load_game':
-            console.log('[%s] Session %d loaded %s', getTimestamp(), clientData.length + 1, data.version);
+            console.log('[%s] Session %d loaded %s | %s', getTimestamp(), clientData.length + 1, data.version, data.custom_build_label || 'custom build unknown');
 
-            clientData[index] = {
-                gen: data.gen,
-                version: data.version
-            }
+            client.gen = data.gen;
+            client.version = data.version;
+            client.custom_build = data.custom_build;
+            client.custom_build_label = data.custom_build_label;
+            clientData[index] = client;
+            rememberGameSnapshot(client, 'load_game');
 
             if (clients.length == 1) {
                 elapsedStart = Date.now();
@@ -482,6 +599,10 @@ function interpretClientMessage(socket, message) {
             const map = data.map_name || '--';
 
             client.map_name = map;
+            client.map_header = data.map_header;
+            client.x = data.trainer_x;
+            client.y = data.trainer_y;
+            client.z = data.trainer_z;
             client.position = `${Math.floor(data.trainer_x || 0)}, ${Math.floor(data.trainer_y || 0)}, ${Math.floor(data.trainer_z || 0)}`;
             client.trainer_name = data.trainer_name || '--'
             client.trainer_id = data.trainer_id || '--';
@@ -499,11 +620,18 @@ function interpretClientMessage(socket, message) {
             }
             
             client.shownValues = shownValues
+            rememberGameSnapshot(client, 'game_state');
             break;
         case 'save_pkx':
             const buffer = Int8Array.from(data);
 
             fs.writeFileSync(`../user/targets/${message.filename}`, buffer);
+            break;
+        case 'nav_observation':
+            navStore.recordNavObservation(data, client || {});
+            break;
+        case 'lua_log':
+            logStore.recordLuaLog(data, client || {});
             break;
     }
 }
@@ -534,6 +662,7 @@ module.exports = {
     config,
     recents,
     targets,
+    getLastGameSnapshot: () => lastGameSnapshot,
     getElapsedStart: () => {
         return elapsedStart;
     },
@@ -545,4 +674,7 @@ module.exports = {
         config = new_config;
     },
     webhookTest,
+    navStorageStatus: () => navStore.status(),
+    luaLogs: () => logStore.status({ developerMode: config && (config.debug === true || config.nav_developer_mode === true || config.nav_show_advanced_modes === true || config.perf_debug === true) }),
+    clearLuaLogs: () => logStore.clearLatest(),
 };

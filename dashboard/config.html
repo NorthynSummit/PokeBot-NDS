@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" class="auto-scaling-disabled">
-
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéBot NDS</title>
+    <title>PokéBot NDS — v39.2 Settings</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Halfmoon/1.0.4/css/halfmoon-variables.css" integrity="sha512-ua2VFI0tK7cQQ5b8xPt8djKW8osl0nwnhgh28hfgYWYlUatSZuVWtsB0sRBM9dwN2Gbcz+YBgrFxW/+7J5Lvew==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-templates@1.0.0/jquery.tmpl.min.js" integrity="sha256-EX43U5s1k9lc6mJ7GoHd3EDBqssRp3x/bBxccLTV99o=" crossorigin="anonymous"></script>
@@ -15,377 +14,139 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="with-custom-webkit-scrollbars with-custom-css-scrollbars" data-dm-shortcut-enabled="true"
-    data-set-preferred-mode-onload="true">
+<body class="with-custom-webkit-scrollbars with-custom-css-scrollbars pb-settings-v5 pb-settings-v6" data-dm-shortcut-enabled="true" data-set-preferred-mode-onload="true">
     <div class="page-wrapper with-navbar">
         <div class="sticky-alerts"></div>
         <header-component></header-component>
-        <div class="sticky-alerts"></div>
-        <div class="content-wrapper">
-            <div class="row-eq-spacing p-20">
-                <div class="input-group" style="height: 28px; float: left; width: 300px;">
-                    <label class="input-group-text">Editing config for</label>
-                    <select class="form-control h-full" id="editing">
-                        <option value="all">All Games</option>
-                    </select>
+        <main class="content-wrapper pb-shell pb50-settings-shell">
+            <section class="pb50-settings-toolbar">
+                <div class="pb50-settings-title">
+                    <span class="pb-eyebrow">Settings Workbench</span>
+                    <h1 id="current-config-title">General</h1>
+                    <p id="current-config-description">Configure global behavior for PokéBot NDS.</p>
                 </div>
-                <button class="btn btn-primary ml-auto float-right" id="post-config" onclick="sendConfig()">
-                    <i class="fa-solid fa-save"></i>
-                    Save Changes (CTRL+S)
-                </button>
-            </div>
-            <fieldset class="row row-eq-spacing" id="config-form" disabled>
-                <div class="col-6">
-                    <div class="card">
-                        <h2 class="content-title">Main</h2>
-                        <label for="mode">Bot Task</label>
-                        <select class="form-control" id="mode">
-                            <option value="manual">Log only</option>
-                            <optgroup label="Soft Resets">
-                                <option value="starters">Starters</option>
-                                <option value="gift">Gifts</option>
-                                <option value="static_encounters">Static Encounters</option>
-                                <option value="primo_gift">Primo Gift Eggs</option>
-                                <option value="roamers">Roamers</option>
-                            </optgroup>
-                            <optgroup label="Standard">
-                                <option value="random_encounters">Random Encounters</option>
-                                <option value="random_encounters_small">Random Encounters (Small)</option>
-                                <option value="daycare_eggs">Egg Hatching</option>
-                                <option value="fishing">Fishing</option>
-                                <option value="headbutt">Headbutt Tree Encounters</option>
-                                <option value="phenomenon_encounters">Phenomenon Encounters</option>
-                                <option value="hidden_grottos">Hidden Grotto Farming</option>
-                            </optgroup>
-                            <optgroup label="Misc.">
-                                <option value="voltorb_flip">Voltorb Flip</option>
-                            </optgroup>
-                        </select>
-                        <div id="option_moving_encounters">
-                            <br>
-                            <label for="move_direction">Movement Method</label>
-                            <select class="form-control" id="move_direction">
-                                <option value="horizontal">Horizontal</option>
-                                <option value="vertical">Vertical</option>
-                                <option value="spin">Spin (Gen IV)</option>
-                            </select>
+                <div class="pb50-settings-actions">
+                    <label for="editing"><span>Profile</span><select class="form-control" id="editing"><option value="all">All Games</option></select></label>
+                    <div class="pb50-save-state" id="save-state">Loaded</div>
+                    <button class="pb-btn pb-btn-subtle" id="discard-config" onclick="discardConfigChanges()" type="button" disabled>Discard</button>
+                    <button class="pb-btn pb-btn-primary" id="post-config" onclick="sendConfig()" type="button" disabled><i class="fa-solid fa-save"></i> Save Changes</button>
+                </div>
+            </section>
+            <div class="pb50-settings-layout">
+                <aside class="pb50-settings-nav" aria-label="Settings categories">
+                    <button class="pb2-nav-item active" data-config-target="general" type="button"><span>General</span><small>Global behavior</small></button>
+                    <button class="pb2-nav-item" data-config-target="task" type="button"><span>Task Selection</span><small>Main mission setup</small></button>
+                    <button class="pb2-nav-item" data-config-target="navigation" type="button"><span>Navigation / Map Tools</span><small>Mapping and travel</small></button>
+                    <button class="pb2-nav-item" data-config-target="targets" type="button"><span>Target Pokémon</span><small>Matching rules</small></button>
+                    <button class="pb2-nav-item" data-config-target="battles" type="button"><span>Battle Behavior</span><small>Flee, fight, safety</small></button>
+                    <button class="pb2-nav-item" data-config-target="autocatch" type="button"><span>Auto-Catch Rules</span><small>Balls and capture</small></button>
+                    <button class="pb2-nav-item" data-config-target="files" type="button"><span>Save / File Behavior</span><small>Logs and output</small></button>
+                    <button class="pb2-nav-item" data-config-target="utility" type="button"><span>Pickup / Utility</span><small>Small helpers</small></button>
+                    <button class="pb2-nav-item pb2-nav-dev" data-config-target="developer" type="button"><span>Developer / Debug</span><small>Advanced diagnostics</small></button>
+                </aside>
+                <fieldset class="pb50-settings-form" id="config-form" disabled>
+                    <section class="pb2-settings-section active" data-config-section="general">
+                        <div class="pb40-section-intro"><span class="pb-eyebrow">General</span><h2>Global behavior</h2><p>These controls apply across tasks. Keep this category simple and stable.</p></div>
+                        <div class="pb40-setting-list">
+                            <div class="pb40-setting-line"><div><strong>Focus mode</strong><p>Disables emulator video/sound output while the bot runs. Usually faster in DeSmuME.</p></div><label class="pb2-switch"><input type="checkbox" id="focus_mode"><span></span></label></div>
+                            <div class="pb40-setting-line"><div><strong>Open dashboard on startup</strong><p>Automatically opens the dashboard page when the server starts.</p></div><label class="pb2-switch"><input type="checkbox" id="auto_open_page"><span></span></label></div>
                         </div>
-                        <div id="option_grotto">
-                            <br>
-                            <label for="grotto">Grotto Location</label>
-                            <select class="form-control" id="grotto">
-                                <option value="0">Floccesy Ranch</option>
-                                <option value="2">Route 5</option>
-                                <option value="4">Lostlorn Forest</option>
-                                <option value="6">Route 6 (Mistralton Cave)</option>
-                                <option value="8">Route 6 (South)</option>
-                                <option value="10">Route 7</option>
-                                <option value="12">Route 13 (East)</option>
-                                <option value="14">Route 13 (West)</option>
-                                <option value="16">Route 9</option>
-                                <option value="18">Giant Chasm</option>
-                                <option value="20">Route 22</option>
-                                <option value="22">Route 23</option>
-                                <option value="24">Abundant Shrine (South)</option>
-                                <option value="26">Abundant Shrine (Lakeside)</option>
-                                <option value="28">Pinwheel Forest (Inside)</option>
-                                <option value="30">Pinwheel Forest (Outside)</option>
-                                <option value="32">Route 3 (Lakeside)</option>
-                                <option value="34">Route 3 (In Grass)</option>
-                                <option value="36">Route 2</option>
-                            </select>
-                        </div>
-                        <div id="option_starters">
-                            <br>
-                            <label for="starters">Target Starters
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">The bot will choose all selected starters an equal
-                                    number of times, cycling through them in order. (Does not apply to HGSS)
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                            <div id="starters">
-                                <div class="custom-switch">
-                                    <input type="checkbox" id="starter0">
-                                    <label for="starter0">Snivy/Turtwig</label>
-                                </div>
-                                <br>
-                                <div class="custom-switch">
-                                    <input type="checkbox" id="starter1">
-                                    <label for="starter1">Tepig/Chimchar</label>
-                                </div>
-                                <br>
-                                <div class="custom-switch">
-                                    <input type="checkbox" id="starter2">
-                                    <label for="starter2">Oshawott/Piplup</label>
+                        <div class="pb40-field-band"><h3>History limits</h3><div class="pb40-field-grid compact"><label class="pb2-field" for="encounter_log_limit"><span>Encounter log limit</span><input id="encounter_log_limit" min="1" type="number" class="form-control"></label><label class="pb2-field" for="target_log_limit"><span>Target log limit</span><input id="target_log_limit" min="1" type="number" class="form-control"></label></div><p>Lua logs only retain <code>latest.log</code> and <code>previous.log</code>. These settings control encounter and target history display.</p></div>
+                        <div class="pb40-profile-note"><strong>Profile scope</strong><span>Editing <em>All Games</em> applies these settings across supported games until game-specific overrides are added.</span></div>
+                    </section>
+
+                    <section class="pb2-settings-section" data-config-section="task">
+                        <div class="pb40-section-intro"><span class="pb-eyebrow">Task Selection</span><h2>Choose the bot mission</h2><p>This is the main behavior selector. Pick a task first, then visit the related categories below.</p></div>
+                        <div class="pb40-task-layout">
+                            <div class="pb40-task-left">
+                                <label class="pb2-field pb40-task-picker" for="mode"><span>Bot task</span><select class="form-control" id="mode">
+                                    <option value="manual">Log only</option>
+                                    <optgroup label="Soft Resets"><option value="starters">Starters</option><option value="gift">Gifts</option><option value="static_encounters">Static Encounters</option><option value="primo_gift">Primo Gift Eggs</option><option value="roamers">Roamers</option></optgroup>
+                                    <optgroup label="Standard Hunting"><option value="random_encounters">Random Encounters</option><option value="random_encounters_small">Random Encounters (Small)</option><option value="daycare_eggs">Egg Hatching</option><option value="fishing">Fishing</option><option value="headbutt">Headbutt Tree Encounters</option><option value="phenomenon_encounters">Phenomenon Encounters</option><option value="hidden_grottos">Hidden Grotto Farming</option></optgroup>
+                                    <optgroup label="Navigation / Map"><option value="map_explore_area">Navigation: Learn Current Area</option><option value="map_cleanup_current_tile">Navigation: Fix Current Tile Data</option><option value="map_graph_to">Navigation: Travel to Coordinate</option><option value="nav_storage_status">Navigation: Storage Status</option><option value="map_graph_build">Navigation: Rebuild Map Cache</option><option value="route_record">Route Record</option><option value="route_replay">Route Replay</option><option value="route_to">Route To Destination</option><option value="map_mark">Map Mark Node</option><option value="map_to">Map To Destination</option><option value="map_probe">Map Probe Tile</option><option value="map_probe_batch">Map Probe Batch</option><option value="map_scan_line">Map Scan Line</option><option value="map_sweep">Map Sweep</option><option value="map_graph_frontier">Map Graph Frontier Report</option><option value="map_terrain_probe">Map Terrain Probe</option><option value="map_explore_once">Map Explore Once</option><option value="map_probe_benchmark">Map Probe Benchmark</option></optgroup>
+                                    <optgroup label="Misc."><option value="voltorb_flip">Voltorb Flip</option></optgroup>
+                                </select></label>
+                                <div class="pb40-task-options">
+                                    <div class="pb40-subhead"><span class="pb-eyebrow">Task Options</span><p>Only options related to the selected task appear here.</p></div>
+                                    <div id="option_moving_encounters" class="pb40-field-band pb2-conditional"><h3>Movement method</h3><label class="pb2-field" for="move_direction"><span>Encounter movement</span><select class="form-control" id="move_direction"><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option><option value="spin">Spin (Gen IV)</option></select></label></div>
+                                    <div id="option_grotto" class="pb40-field-band pb2-conditional"><h3>Hidden Grotto location</h3><label class="pb2-field" for="grotto"><span>Grotto</span><select class="form-control" id="grotto"><option value="0">Floccesy Ranch</option><option value="2">Route 5</option><option value="4">Lostlorn Forest</option><option value="6">Route 6 (Mistralton Cave)</option><option value="8">Route 6 (South)</option><option value="10">Route 7</option><option value="12">Route 13 (East)</option><option value="14">Route 13 (West)</option><option value="16">Route 9</option><option value="18">Giant Chasm</option><option value="20">Route 22</option><option value="22">Route 23</option><option value="24">Abundant Shrine (South)</option><option value="26">Abundant Shrine (Lakeside)</option><option value="28">Pinwheel Forest (Inside)</option><option value="30">Pinwheel Forest (Outside)</option><option value="32">Route 3 (Lakeside)</option><option value="34">Route 3 (In Grass)</option><option value="36">Route 2</option></select></label></div>
+                                    <div id="option_starters" class="pb40-field-band pb2-conditional"><h3>Starter targets</h3><div class="pb2-toggle-list"><label><input type="checkbox" id="starter0"> Snivy / Turtwig</label><label><input type="checkbox" id="starter1"> Tepig / Chimchar</label><label><input type="checkbox" id="starter2"> Oshawott / Piplup</label></div></div>
+                                    <div id="option_primo" class="pb40-field-band pb2-conditional"><h3>Primo gift phrases</h3><p>Use the linked calculator if needed, then select the four words the bot should say in Violet City.</p><div class="pb40-field-grid two"><label class="pb2-field"><span>Question 1, word 1</span><select class="primo-phrase form-control" id="primo1"></select></label><label class="pb2-field"><span>Question 1, word 2</span><select class="primo-phrase form-control" id="primo2"></select></label><label class="pb2-field"><span>Question 2, word 1</span><select class="primo-phrase form-control" id="primo3"></select></label><label class="pb2-field"><span>Question 2, word 2</span><select class="primo-phrase form-control" id="primo4"></select></label></div></div>
+                                    <div class="pb40-task-empty" id="task-options-empty">No extra task options for this mode.</div>
                                 </div>
                             </div>
-                        </div>
-                        <div id="option_primo">
-                            <br>
-                            <label for="words">Secret Phrases</label>
-                            <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Secret phrase the bot should tell to Primo in the Violet City Pokémon Center. Check the linked website to find a phrase that results in an egg for your Trainer ID.
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            <a href="https://www.pokewiki.de/Spezial:Geheimcode-Generator?uselang=en" target="_blank"> (calculate)</a>
-                            <div style="display: block; width: 100%; align-items: center;">
-                                <label for="word1">Question 1.</label>
-                                <select class="primo-phrase form-control" id="primo1"></select>
-                                <select class="primo-phrase form-control" id="primo2"></select>
-                            </div>
-                            <div style="display: block; width: 100%; align-items: center;">
-                                <label for="word1">Question 2.</label>
-                                <select class="primo-phrase form-control" id="primo3"></select>
-                                <select class="primo-phrase form-control" id="primo4"></select>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="debug">
-                            <label for="debug">Show debug log
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Outputs extra info to the Lua Console. Useful if you
-                                    need to troubleshoot an issue or collect info for an Issue report.
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2 class="content-title">Discord</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="show_status">
-                            <label for="show_status">Enable Discord Activity status on startup</label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="webhook_enabled">
-                            <label for="webhook_enabled">Enable Webhook
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Sends a message through a Discord Webhook
-                                    when a target Pokémon is encountered
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                        </div>
-                        <div id="option_webhook">
-                            <br>
-                            <label for="webhook_url">Webhook URL</label>
-                            <input id="webhook_url" class="form-control">
-                            <br>
-                            <button class="btn" id="post-config" onclick="testWebhook()">
-                                <i class="fa fa-paper-plane"></i>
-                                Send Test Message
-                            </button>
-                            <br>
-                            <br>
-                            <h2 class="content-title">Notifications</h2>
-                            <div class="custom-switch">
-                                <input type="checkbox" id="ping_user">
-                                <label for="ping_user">Enable Announcement Ping
-                                    <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                    <div id="tooltip" role="tooltip">Pings a user or role when sending a message upon
-                                        finding a target Pokémon
-                                        <div id="arrow" data-popper-arrow></div>
+                            <aside class="pb2-task-summary pb38-task-mission" id="task-summary-card" aria-label="Selected mission details">
+                                <header class="pb38-task-header">
+                                    <span class="pb-eyebrow">Selected Mission</span>
+                                    <h3 id="task-summary-mode">—</h3>
+                                </header>
+                                <section class="pb38-task-section">
+                                    <h4>Description</h4>
+                                    <p id="task-summary-description">Select a task to see the relevant settings.</p>
+                                </section>
+                                <section class="pb38-task-section pb38-task-details">
+                                    <h4>Details</h4>
+                                    <div class="pb2-task-meta">
+                                        <div><span>Category</span><strong id="task-summary-family">—</strong></div>
+                                        <div><span>Recommended profile</span><strong id="task-summary-risk">—</strong></div>
                                     </div>
-                                </label>
+                                </section>
+                                <section class="pb2-task-requirements pb38-task-section">
+                                    <h4>Requirements</h4>
+                                    <ul id="task-summary-requirements"><li>Select a task to view requirements.</li></ul>
+                                </section>
+                                <section class="pb2-task-related pb38-task-section">
+                                    <h4>Related Settings</h4>
+                                    <div class="pb40-related-links">
+                                        <a href="#settings-navigation" data-config-link="navigation">Navigation settings</a>
+                                        <a href="#settings-targets" data-config-link="targets">Target rules</a>
+                                        <a href="#settings-battles" data-config-link="battles">Battle behavior</a>
+                                        <a href="#settings-files" data-config-link="files">Save/file behavior</a>
+                                    </div>
+                                </section>
+                            </aside>
+                        </div>
+                    </section>
+
+                    <section class="pb2-settings-section" data-config-section="navigation">
+                        <div class="pb40-section-intro"><span class="pb-eyebrow">Navigation / Map Tools</span><h2>Mapping and travel controls</h2><p>Navigation options are grouped by task type. Developer tools stay hidden unless Developer Mode or advanced navigation tools are enabled.</p></div>
+                        <div class="pb40-empty-state" id="navigation-empty"><strong>No navigation task selected.</strong><p>Choose a navigation task in Task Selection to reveal map controls.</p></div>
+                        <div id="option_routes" class="pb2-nav-workbench">
+                            <datalist id="map_node_suggestions"><option value="goldenrod_pc_outside"></option><option value="route34_north"></option><option value="route34_daycare_corner"></option><option value="daycare_front"></option><option value="route34_grass_entry"></option><option value="route34_grass"></option></datalist>
+                            <div id="travel_mode_help" class="pb40-mode-sheet">
+                                <div class="travel-help" data-modes="map_explore_area"><h3>Learn Current Area</h3><dl><dt>Purpose</dt><dd>Autonomously learns nearby tiles with Coverage Planner v1.</dd><dt>Behavior</dt><dd>Soft-boundary wall-rub avoidance, gap rechecks, normalized storage, original encounter handling.</dd><dt>Recommendation</dt><dd>Start with 5–10 actions until the area looks safe.</dd></dl></div>
+                                <div class="travel-help" data-modes="map_cleanup_current_tile"><h3>Fix Current Tile Data</h3><dl><dt>Purpose</dt><dd>Repairs suspicious observations near the current tile.</dd><dt>Best for</dt><dd>False blocked edges caused by menus, dialogue, or battles.</dd></dl></div>
+                                <div class="travel-help" data-modes="map_graph_to"><h3>Travel to Coordinate</h3><dl><dt>Purpose</dt><dd>Pathfinds over learned graph data to a target coordinate.</dd><dt>Limitations</dt><dd>Requires known map data and stops when reality disagrees with cache.</dd></dl></div>
+                                <div class="travel-help" data-modes="map_graph_build"><h3>Rebuild Map Cache</h3><dl><dt>Purpose</dt><dd>Compacts raw probe/sweep observations into <code>map_graph.txt</code>.</dd><dt>Use after</dt><dd>Manual edits, cleanup, or storage repairs.</dd></dl></div>
+                                <div class="travel-help" data-modes="nav_storage_status"><h3>Storage Status</h3><dl><dt>Purpose</dt><dd>Prints active storage paths and version information without moving.</dd></dl></div>
+                                <div class="travel-help" data-modes="route_record route_replay route_to map_mark map_to"><h3>Legacy Route Tools</h3><dl><dt>Purpose</dt><dd>Records, replays, chains, and marks manual route nodes.</dd><dt>Best for</dt><dd>Known paths and regression tests.</dd></dl></div>
+                                <div class="travel-help" data-modes="map_probe map_probe_batch map_scan_line map_sweep map_explore_once map_graph_frontier map_terrain_probe map_probe_benchmark"><h3>Developer Mapping Tools</h3><dl><dt>Purpose</dt><dd>Probe, sweep, frontier, terrain, and benchmark tools used while improving the mapper.</dd><dt>Use carefully</dt><dd>These are advanced diagnostics.</dd></dl></div>
                             </div>
-                            <div id="option_ping_user">
-                                <br>
-                                <label for="user_id">User/Role ID</label>
-                                <input id="user_id" class="form-control">
-                            </div>
-                            <br />
-                            <div class="custom-switch">
-                              <input type="checkbox" id="encounter_milestones_enable" />
-                              <label for="encounter_milestones_enable"
-                                >Enable Pokemon Encounter Milestones
-                              </label>
-                            </div>
-                            <div id="option_encounter_milestones">
-                              <br />
-                              <label for="encounter_milestones_interval">Interval</label>
-                              <input
-                                id="encounter_milestones_interval"
-                                style="width: 100px"
-                                min="1"
-                                type="number"
-                                class="form-control"
-                              />
-                            </div>
+                            <div class="pb40-field-band"><h3>Route and node settings</h3><div class="pb40-field-grid three"><label class="pb2-field travel-field" id="travel_route_name_field" data-modes="route_record route_replay" for="route_name"><span>Route file name</span><input id="route_name" class="form-control" list="map_node_suggestions" value="goldenrod_test" placeholder="goldenrod_pc_outside_to_route34_north"></label><label class="pb2-field travel-field" id="travel_route_start_field" data-modes="route_to" for="route_start"><span>Start node</span><input id="route_start" list="map_node_suggestions" class="form-control" value="goldenrod_pc_outside"></label><label class="pb2-field travel-field" id="travel_route_destination_field" data-modes="route_to" for="route_destination"><span>Destination node</span><input id="route_destination" class="form-control" list="map_node_suggestions" value="route34_grass" placeholder="daycare_corner"></label><label class="pb2-field travel-field" id="travel_map_node_field" data-modes="map_mark" for="map_node_name"><span>Map node name</span><input id="map_node_name" class="form-control" list="map_node_suggestions" value="route34_grass" placeholder="route34_grass_entry"></label><label class="pb2-field travel-field" id="travel_map_destination_field" data-modes="map_to" for="map_destination"><span>Map destination</span><input id="map_destination" list="map_node_suggestions" class="form-control" value="route34_grass"></label><label class="pb2-field travel-field" data-modes="map_probe map_probe_batch map_scan_line map_sweep" for="map_probe_direction"><span>Probe direction</span><select class="form-control" id="map_probe_direction"><option value="Up">Up</option><option value="Right">Right</option><option value="Down">Down</option><option value="Left">Left</option></select></label><label class="pb2-field travel-field" id="travel_map_probe_batch_steps_field" data-modes="map_probe_batch map_scan_line map_sweep" for="map_probe_batch_steps"><span>Max steps</span><input id="map_probe_batch_steps" class="form-control" type="number" min="1" max="50" value="8"></label><label class="pb2-field travel-field" id="travel_map_sweep_lines_field" data-modes="map_sweep" for="map_sweep_lines"><span>Sweep lines</span><input id="map_sweep_lines" class="form-control" type="number" min="1" max="20" value="3"></label><label class="pb2-field travel-field" id="travel_map_sweep_side_direction_field" data-modes="map_sweep" for="map_sweep_side_direction"><span>Side step direction</span><select class="form-control" id="map_sweep_side_direction"><option value="Right">Force screen Right</option><option value="Left">Force screen Left</option><option value="Up">Force screen Up</option><option value="Down">Force screen Down</option><option value="auto_right">Auto: right-hand turn from scan direction</option><option value="auto_left">Auto: left-hand turn from scan direction</option></select></label></div><div class="pb2-toggle-list travel-field" id="travel_map_probe_batch_save_field" data-modes="map_probe_batch map_scan_line map_sweep"><label><input type="checkbox" id="map_probe_batch_save"> Save batch results at end</label></div></div>
+                            <div class="pb40-field-band travel-field" id="travel_map_graph_target_field" data-modes="map_graph_to"><h3>Graph target</h3><div class="pb40-field-grid four"><label class="pb2-field" for="map_graph_target_map"><span>Map header</span><input id="map_graph_target_map" class="form-control" type="number" value="38"></label><label class="pb2-field" for="map_graph_target_x"><span>Target X</span><input id="map_graph_target_x" class="form-control" type="number" step="0.5" value="359.5"></label><label class="pb2-field" for="map_graph_target_z"><span>Target Z</span><input id="map_graph_target_z" class="form-control" type="number" step="0.5" value="384.5"></label><label class="pb2-field" for="map_graph_max_path_steps"><span>Max path steps</span><input id="map_graph_max_path_steps" class="form-control" type="number" min="1" max="500" value="50"></label></div><div class="pb2-toggle-list"><label><input type="checkbox" id="map_graph_allow_reverse_edges" checked> Allow inferred reverse walkable edges</label></div></div>
+                            <div class="pb40-field-band travel-field" id="travel_map_explore_area_field" data-modes="map_explore_area"><h3>Learn Current Area</h3><div class="pb40-field-grid compact"><label class="pb2-field" for="map_explore_area_actions"><span>Max explore actions</span><input id="map_explore_area_actions" class="form-control" type="number" min="1" max="50" value="5"></label></div><input type="hidden" id="map_explore_strategy" value="coverage_planner"><input type="hidden" id="map_explore_battle_policy" value="original_encounter_flow"><input type="hidden" id="map_explore_flee_timeout_frames" value="1800"><input type="hidden" id="nav_storage_enabled" value="true"><div class="pb2-toggle-list"><label><input type="checkbox" id="map_explore_continue_after_battle" checked> Continue after battles when safe</label></div><p>Targets use catch settings. Non-targets flee unless Defeat non-targets is enabled. Storage is always written for area learning.</p></div>
+                            <div class="pb40-field-band danger-band travel-field" id="travel_map_cleanup_current_tile_field" data-modes="map_cleanup_current_tile"><h3>Fix Current Tile Data</h3><p>Backups are created before cleanup. Default settings remove only blocked observations from the current tile.</p><div class="pb40-field-grid three"><label class="pb2-field" for="nav_cleanup_direction"><span>Direction</span><select class="form-control" id="nav_cleanup_direction"><option value="All">All directions</option><option value="Up">Up</option><option value="Right">Right</option><option value="Down">Down</option><option value="Left">Left</option></select></label><label class="pb2-field" for="nav_cleanup_scope"><span>Remove</span><select class="form-control" id="nav_cleanup_scope"><option value="blocked">Blocked only</option><option value="battle">Battle observations only</option><option value="blocked_battle">Blocked + battle observations</option><option value="all_non_walkable">All non-walkable observations</option><option value="all_current">Everything from current tile</option><option value="walkable_transition">Walkable/transition edges only</option></select></label><label class="pb2-field" for="nav_cleanup_radius_tiles"><span>Radius</span><input id="nav_cleanup_radius_tiles" class="form-control" type="number" min="0" max="10" value="0"></label></div><div class="pb2-toggle-list"><label><input type="checkbox" id="nav_cleanup_rebuild_graph" checked> Rebuild map cache after cleanup</label></div></div>
+                            <div class="pb40-field-band travel-field" id="travel_map_terrain_probe_field" data-modes="map_terrain_probe"><h3>Terrain Probe Investigation</h3><label class="pb2-field" for="map_terrain_label"><span>Terrain sample label</span><input id="map_terrain_label" class="form-control" value="unknown" placeholder="road, tall_grass, cave_floor, building_floor"></label></div>
+                            <div class="pb40-field-band travel-field" id="travel_map_probe_benchmark_field" data-modes="map_probe_benchmark"><h3>Probe Benchmark</h3><label class="pb2-field" for="map_probe_benchmark_test"><span>Benchmark test</span><select id="map_probe_benchmark_test" class="form-control"><option value="move_only_abort">A: Move only, then abort</option><option value="move_read_abort">B: Move + read final position, then abort</option><option value="move_write_abort">C: Move + read + write file, then abort</option><option value="file_write_only">D: File write only, no movement</option><option value="shutdown_only">E: Shutdown only, no movement/file</option><option value="move_idle_no_abort">F: Move, then idle without abort</option></select></label></div>
+                            <div class="pb40-field-band travel-field" id="travel_replay_options_field" data-modes="route_replay"><h3>Replay Options</h3><div class="pb2-toggle-list"><label><input type="checkbox" id="route_reverse"> Replay route backwards</label></div></div><div class="pb40-field-band travel-field" id="travel_common_options_field" data-modes="route_replay route_to map_to"><h3>Travel Options</h3><div class="pb2-toggle-list"><label><input type="checkbox" id="route_compress"> Compress route into corners</label></div></div><div class="pb40-field-band travel-field" id="travel_notes_field" data-modes="map_to route_to map_probe map_probe_batch map_scan_line map_sweep map_graph_build map_graph_to map_graph_frontier map_explore_once map_explore_area map_cleanup_current_tile nav_storage_status map_probe_benchmark"><h3>Current Map v1 Notes</h3><p>Map v1 still depends on saved route files and cached graph files. v39 keeps normalized TSV storage as the safe source-of-truth foundation and reports storage health without forcing SQLite.</p></div>
                         </div>
-                    </div>
-                    <div class="card">
-                        <h2 class="content-title">Other</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="focus_mode">
-                            <label for="focus_mode">Focus mode
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Disables video and sound output on the emulator while active to speed up emulation. Boosts efficiency by 2x-3x in DeSmuME, less effective on BizHawk. 
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="auto_open_page">
-                            <label for="auto_open_page">Open dashboard page in browser on startup</label>
-                        </div>
-                        <br>
-                        <label for="encounter_log_limit">Encounter Log Limit</label>
-                        <input id="encounter_log_limit" style="width:100px" min="1" type="number" class="form-control">
-                        <br>
-                        <label for="target_log_limit">Target Log Limit</label>
-                        <input id="target_log_limit" style="width:100px" min="1" type="number" class="form-control">
-                    </div>
-                    <div class="card">
-                        <h2 class="content-title">Advanced</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="ot_override">
-                            <label for="ot_override">TID/SID Override
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Uses a preset TID/SID pair to calculate Shiny Value instead of
-                                    the one present in the current game. Useful for hunting eggs that would be shiny when
-                                    hatched in a different game, especially Manaphy. 
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                        </div>
-                        <br>
-                        <div id="option_ot_override">
-                            <label for="tid_override">TID</label>
-                            <input id="tid_override" style="width:100px" class="form-control">
-                            <br>
-                            <label for="sid_override">SID</label>
-                            <input id="sid_override" style="width:100px" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="card">
-                        <h2 class="content-title">Target Pokémon</h2>
-                        <label for="catch">Target traits
-                            <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                            <div id="tooltip" role="tooltip">YAML format. Values are not case-sensitive, but fields are. 
-                                A Pokémon must meet every requirement listed to be considered a target.
-                                <br> • For arrays, only one item must match
-                                <br> • For numbers, matches when (value >= rule)
-                                <br><br>
-                                For a full list of traits you can specify, check the pokemon.parse_data definition 
-                                inside pokemon.lua.
-                                <div id="arrow" data-popper-arrow></div>
-                            </div>
-                        </label>
-                        <textarea class="form-control" spellcheck="false"
-                            style="min-width:120px; max-width:100%; height: 120px;" id="target_traits"
-                            placeholder=""></textarea>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="always_catch_shinies">
-                            <label for="always_catch_shinies">Make exceptions for shiny Pokemon
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                            <div id="tooltip" role="tooltip">When encountering a shiny Pokémon, ignore the above ruleset and always consider it a target.</div>
-                            </label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="save_game_after_catch">
-                            <label for="save_game_after_catch">Save game after obtaining a target</label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="save_pkx">
-                            <label for="save_pkx">Save target Pokémon to file
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">Saves encountered target Pokémon to a .pk4/.pk5 file in
-                                    the
-                                    project's /user directory. These can be directly imported into PKHeX.
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2 class="content-title">Wild Battles</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="battle_non_targets">
-                            <label for="battle_non_targets">Defeat non-targets</label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="cycle_lead_pokemon">
-                            <label for="cycle_lead_pokemon">Replace lead Pokémon when exhausted</label>
-                        </div>
-                        <br>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="thief_wild_items">
-                            <label for="thief_wild_items">Use Thief to steal held items</label>
-                        </div>
-                        <br>
-                        <h2 class="content-title">Auto-Catch</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="auto_catch">
-                            <label for="auto_catch">Auto-catch wild targets</label>
-                        </div>
-                        <div id="option_auto_catch">
-                            <br>
-                            <div class="custom-switch">
-                                <input type="checkbox" id="subdue_target">
-                                <label for="subdue_target">Subdue Pokémon before catching</label>
-                            </div>
-                            <br>
-                            <label for="pokeball_priority">Poké Ball priority
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">YAML format array. Specifies the preferred Poké Ball
-                                    type to catch a target with, from highest to lowest priority.
-                                    Entries must match an English Poké Ball name. (Without the 'é' accent)
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                            <textarea class="form-control" spellcheck="false"
-                                style="min-width:120px; max-width:100%; height: 120px;" id="pokeball_priority"
-                                placeholder=""></textarea>
-                            <br>
-                            <label for="pokeball_override">Poké Ball override
-                                <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                                <div id="tooltip" role="tooltip">YAML format. Specifies the target traits per Poké Ball
-                                    type the bot will check for in order to use. Traits must always be in a list. Takes
-                                    priority over Poké Ball priority
-                                    <div id="arrow" data-popper-arrow></div>
-                                </div>
-                            </label>
-                            <textarea class="form-control" spellcheck="false"
-                                style="min-width:120px; max-width:100%; height: 260px;" id="pokeball_override"
-                                placeholder=""></textarea>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2 class="content-title">Pickup</h2>
-                        <div class="custom-switch">
-                            <input type="checkbox" id="pickup">
-                            <label for="pickup">Collect Pickup items from party</label>
-                        </div>
-                        <br>
-                        <label for="pickup_threshold">Pickup threshold
-                            <i class="fa fa-info-circle" id="tooltip-icon" aria-describedby="tooltip"></i>
-                            <div id="tooltip" role="tooltip">Number of party Pokémon with Pickup that must find an item
-                                before collection.
-                                <div id="arrow" data-popper-arrow></div>
-                            </div>
-                        </label>
-                        <input id="pickup_threshold" style="width:100px" min="1" max="6" type="number" class="form-control">
-                    </div>
-                </div>
-            </fieldset>
-        </div>
+                    </section>
+
+                    <section class="pb2-settings-section" data-config-section="targets"><div class="pb40-section-intro"><span class="pb-eyebrow">Target Pokémon</span><h2>Target matching and protection</h2><p>Define what counts as a target and what should happen after a target is found.</p></div><label class="pb2-field" for="target_traits"><span>Target traits YAML</span><textarea class="form-control pb2-codebox" spellcheck="false" id="target_traits" placeholder="name:\n  - Ditto"></textarea></label><p class="pb40-inline-help">A Pokémon must satisfy every listed requirement. Arrays match when at least one listed value matches.</p><div class="pb40-setting-list"><div class="pb40-setting-line"><div><strong>Always protect shinies</strong><p>Shiny Pokémon are treated as targets even when they do not match target traits.</p></div><label class="pb2-switch"><input type="checkbox" id="always_catch_shinies"><span></span></label></div><div class="pb40-setting-line"><div><strong>Save game after target</strong><p>Writes the in-game save after a target is obtained.</p></div><label class="pb2-switch"><input type="checkbox" id="save_game_after_catch"><span></span></label></div><div class="pb40-setting-line"><div><strong>Export target file</strong><p>Saves target Pokémon to a .pk4/.pk5 file for PKHeX.</p></div><label class="pb2-switch"><input type="checkbox" id="save_pkx"><span></span></label></div></div></section>
+                    <section class="pb2-settings-section" data-config-section="battles"><div class="pb40-section-intro"><span class="pb-eyebrow">Battle Behavior</span><h2>Wild battle decisions</h2><p>These settings affect both Random Encounters and navigation battle handling.</p></div><div class="pb40-warning-line"><strong>Mapping safety:</strong> leave Defeat non-targets off when mapping unless you intentionally want to battle non-target wild Pokémon.</div><div class="pb40-setting-list"><div class="pb40-setting-line danger-line"><div><strong>Defeat non-targets</strong><p>Turns non-target encounters into fights instead of default flee behavior.</p></div><label class="pb2-switch"><input type="checkbox" id="battle_non_targets"><span></span></label></div><div class="pb40-setting-line"><div><strong>Replace exhausted lead</strong><p>Cycles lead Pokémon when the active lead can no longer perform safely.</p></div><label class="pb2-switch"><input type="checkbox" id="cycle_lead_pokemon"><span></span></label></div><div class="pb40-setting-line"><div><strong>Use Thief</strong><p>Steals held wild items when the selected task supports it.</p></div><label class="pb2-switch"><input type="checkbox" id="thief_wild_items"><span></span></label></div></div></section>
+                    <section class="pb2-settings-section" data-config-section="autocatch"><div class="pb40-section-intro"><span class="pb-eyebrow">Auto-Catch Rules</span><h2>Capture behavior</h2><p>Configure whether targets should be caught automatically and which balls should be preferred.</p></div><div class="pb40-setting-line"><div><strong>Auto-catch wild targets</strong><p>Attempts to catch Pokémon that match target rules.</p></div><label class="pb2-switch"><input type="checkbox" id="auto_catch"><span></span></label></div><div id="option_auto_catch" class="pb40-field-band pb2-conditional"><div class="pb40-setting-line"><div><strong>Subdue before catching</strong><p>Weakens the target before throwing balls when supported.</p></div><label class="pb2-switch"><input type="checkbox" id="subdue_target"><span></span></label></div><div class="pb40-field-grid two"><label class="pb2-field" for="pokeball_priority"><span>Poké Ball priority YAML</span><textarea class="form-control pb2-codebox" spellcheck="false" id="pokeball_priority"></textarea></label><label class="pb2-field" for="pokeball_override"><span>Poké Ball override YAML</span><textarea class="form-control pb2-codebox tall" spellcheck="false" id="pokeball_override"></textarea></label></div></div></section>
+                    <section class="pb2-settings-section" data-config-section="files"><div class="pb40-section-intro"><span class="pb-eyebrow">Save / File Behavior</span><h2>Notifications and output behavior</h2><p>Configure Discord presence, webhook announcements, milestones, and special trainer ID overrides.</p></div><div class="pb40-field-band"><h3>Discord and notifications</h3><div class="pb40-setting-list"><div class="pb40-setting-line"><div><strong>Discord activity status</strong><p>Shows bot activity through Discord presence at startup. Optional dependency path stays non-blocking.</p></div><label class="pb2-switch"><input type="checkbox" id="show_status"><span></span></label></div><div class="pb40-setting-line"><div><strong>Webhook announcements</strong><p>Sends target encounter announcements to a Discord webhook.</p></div><label class="pb2-switch"><input type="checkbox" id="webhook_enabled"><span></span></label></div></div><div id="option_webhook" class="pb2-conditional pb40-webhook-area"><label class="pb2-field" for="webhook_url"><span>Webhook URL</span><input id="webhook_url" class="form-control"></label><button class="pb-btn pb-btn-secondary" type="button" onclick="testWebhook()"><i class="fa fa-paper-plane"></i> Send Test Message</button><div class="pb40-setting-line"><div><strong>Announcement ping</strong><p>Pings a user or role when a target is found.</p></div><label class="pb2-switch"><input type="checkbox" id="ping_user"><span></span></label></div><label id="option_ping_user" class="pb2-field pb2-conditional" for="user_id"><span>User / Role ID</span><input id="user_id" class="form-control"></label><div class="pb40-setting-line"><div><strong>Encounter milestones</strong><p>Sends periodic milestone announcements.</p></div><label class="pb2-switch"><input type="checkbox" id="encounter_milestones_enable"><span></span></label></div><label id="option_encounter_milestones" class="pb2-field pb2-conditional" for="encounter_milestones_interval"><span>Milestone interval</span><input id="encounter_milestones_interval" min="1" type="number" class="form-control"></label></div></div><div class="pb40-field-band"><h3>TID/SID override</h3><div class="pb40-setting-line"><div><strong>Use TID/SID override</strong><p>Useful for egg hunts where shiny value depends on a different save file.</p></div><label class="pb2-switch"><input type="checkbox" id="ot_override"><span></span></label></div><div id="option_ot_override" class="pb40-field-grid compact pb2-conditional"><label class="pb2-field" for="tid_override"><span>TID</span><input id="tid_override" class="form-control"></label><label class="pb2-field" for="sid_override"><span>SID</span><input id="sid_override" class="form-control"></label></div></div></section>
+                    <section class="pb2-settings-section" data-config-section="utility"><div class="pb40-section-intro"><span class="pb-eyebrow">Pickup / Utility</span><h2>Utility automation</h2><p>Small helpers that run around the main bot behavior.</p></div><div class="pb40-setting-list"><div class="pb40-setting-line"><div><strong>Collect Pickup items</strong><p>Checks party Pickup items and collects them when threshold is reached.</p></div><label class="pb2-switch"><input type="checkbox" id="pickup"><span></span></label></div></div><label class="pb2-field pb2-field-small" for="pickup_threshold"><span>Pickup threshold</span><input id="pickup_threshold" min="1" max="6" type="number" class="form-control"></label></section>
+                    <section class="pb2-settings-section" data-config-section="developer"><div class="pb40-section-intro developer"><span class="pb-eyebrow">Developer / Debug</span><h2>Diagnostics and advanced controls</h2><p>These options intentionally sit away from normal user settings. Turn them on only when diagnosing or developing.</p></div><div class="pb40-setting-list"><div class="pb40-setting-line"><div><strong>Developer Mode / Full Debug Log</strong><p>Shows full runtime logs, debug-only lines, and [PERF] timing output.</p></div><label class="pb2-switch"><input type="checkbox" id="debug"><span></span></label></div><div class="pb40-setting-line"><div><strong>Show advanced navigation tools</strong><p>Reveals probe, scan, sweep, benchmark, and legacy navigation modes in Task Selection.</p></div><label class="pb2-switch"><input type="checkbox" id="nav_show_advanced_modes"><span></span></label></div></div></section>
+                </fieldset>
+            </div>
+        </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFNtR3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Halfmoon/1.0.4/js/halfmoon.min.js" integrity="sha512-R9gvwJKiTgw9ADz34UDXGetxd4zmcAfGWB7IKO05p79bliXyQ7Nd2PMYmxSF48pmVvj7RJNp8WXtJHF/ZRm3KA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="js/tooltip.js"></script>
-    <script src="js/page.js"></script>
-    <script src="js/config.js"></script>
+    <script src="js/tooltip.js?v=39.2"></script>
+    <script src="js/page.js?v=39.2"></script>
+    <script src="js/config.js?v=39.2"></script>
 </body>
-
 </html>

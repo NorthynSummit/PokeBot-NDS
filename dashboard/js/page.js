@@ -14,8 +14,9 @@ class Header extends HTMLElement {
                 <div class="navbar-brand text-nowrap">
                     <img src="assets/pokemon-icon/201-27.png" class="icon" id="icon">
                     PokéBot NDS
+                    <span class="navbar-subtitle">Navigation Engine</span>
                 </div>
-                <span class="navbar-text text-monospace font-size-12">v1.1-beta</span>
+                <span class="navbar-text text-monospace font-size-12" id="nav-build-version">Build loading…</span>
                 <ul class="navbar-nav d-flex d-md-flex">
                     <li class="nav-item nav-link px-10">
                         <a href="dashboard.html">
@@ -33,22 +34,6 @@ class Header extends HTMLElement {
                             <button type="button" class="btn position-relative px-10">
                                 <i class="fa fa-gear"></i>
                                 Config
-                            </button>
-                        </a>
-                    </li>
-                    <li class="nav-item nav-link px-10">
-                        <a href="https://github.com/wyanido/pokebot-nds/" target="_blank">
-                            <button type="button" class="btn position-relative px-10">
-                                <i class="fa-brands fa-github"></i>
-                                Github
-                            </button>
-                        </a>
-                    </li>
-                    <li class="nav-item nav-link px-10">
-                        <a href="https://ko-fi.com/B0B7RMWPP" target="_blank">
-                            <button type="button" class="btn position-relative px-10">
-                                <i class="fa-solid fa-heart"></i>
-                                Donate
                             </button>
                         </a>
                     </li>
@@ -112,6 +97,24 @@ function socketServerSend(endpoint, data, callback) {
     const url = `http://localhost:3000/api/${encodeURIComponent(endpoint)}?data=${JSON.stringify(data)}`
     
     socketServerCommunicate(method, url, callback)
+}
+
+function updateNavBuildVersion() {
+    socketServerGet('version', function (error, version) {
+        if (error || !version) return;
+        const ele = document.getElementById('nav-build-version');
+        if (ele) {
+            ele.textContent = version.build ? version.build : 'Build unknown';
+            ele.title = `${version.build || ''} ${version.name || ''}`.trim();
+        }
+        if (version.build) document.title = `PokéBot NDS — ${version.build}`;
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateNavBuildVersion);
+} else {
+    updateNavBuildVersion();
 }
 
 function randomisePageIcon() {

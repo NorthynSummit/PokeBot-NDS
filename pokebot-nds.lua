@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Main Pokebot NDS script
--- Author: wyanido
--- Homepage: https://github.com/wyanido/pokebot-nds
+-- Custom navigation build
+-- Version authority: lua\methods\nav\nav_version.lua
 --
 -- Responsible for loading the files appropriate to the current state,
 -- including emulator, game, language, and configuration.
@@ -9,8 +9,18 @@
 package.cpath = package.cpath .. ";.\\lua\\modules\\?.dll" -- Allow socket.core to be detected beyond the project root
 dofile("lua\\detect_emu.lua")
 
-print("PokeBot NDS v1.1-beta by wyanido")
-print("https://github.com/wyanido/pokebot-nds")
+-- Load the custom build identity before dashboard/config startup so root script
+-- console output and later navigation/dashboard displays use the same source.
+local _nav_version_ok, _nav_version_err = pcall(function()
+    dofile("lua\\methods\\nav\\nav_version.lua")
+end)
+
+print("Pokebot NDS - Custom Navigation Build")
+if nav_build_label then
+    print("Custom build: " .. tostring(nav_build_label()))
+elseif not _nav_version_ok then
+    print("Custom build: unknown (nav_version.lua failed: " .. tostring(_nav_version_err) .. ")")
+end
 print("Running " .. _VERSION .. " on " .. _EMU)
 print("")
 

@@ -7,13 +7,11 @@
 --- Attempts to re-read the party data from memory and update the global reference 
 function update_party()
     -- Don't attempt to read the party before a save is loaded.
-    -- Notably it can still be read at this point in gen 4, but
-    -- this is ignored to keep it consistent across all games.
     if not game_state.in_game then
         local party_was_emptied = #party ~= 0
 
         party = {}
-        
+
         return party_was_emptied
     end
 
@@ -21,15 +19,23 @@ function update_party()
     local party_was_updated = false
 
     for i = 1, 6 do
-        local checksum = mword(pointers.party_data + 6 + _MON_BYTE_LENGTH * (i - 1))
-        
+        local addr = pointers.party_data + _MON_BYTE_LENGTH * (i - 1)
+        local current_pid = string.format("%08X", mdword(addr))
+        local current_checksum = mword(addr + 6)
+
         if i <= party_size then
-            if party[i] == nil or checksum ~= party[i].checksum then -- If the Pokemon has changed, re-read its data
-                local mon_data = pokemon.read_data(pointers.party_data + (i - 1) * _MON_BYTE_LENGTH)
+            -- Re-read if:
+            -- 1. slot is new
+            -- 2. checksum changed
+            -- 3. PID changed
+            --
+            -- PID matters because Gen 4 nature is PID % 25.
+            if party[i] == nil or current_checksum ~= party[i].checksum or current_pid ~= party[i].pid then
+                local mon_data = pokemon.read_data(addr)
 
                 if mon_data then
                     local mon = pokemon.parse_data(mon_data, true)
-                    
+
                     party[i] = mon
                     party_was_updated = true
                 else
@@ -43,8 +49,34 @@ function update_party()
             end
         end
     end
-    
+
     return party_was_updated
+end
+
+--- Creates a simple identity key for the current foe data in memory.
+--- Uses PID + checksum because PID controls Gen 4 nature.
+local function get_current_foe_key()
+    local foe_count = mbyte(pointers.foe_count)
+
+    if foe_count == 0 then
+        return nil
+    end
+
+    local parts = {}
+
+    for i = 1, foe_count do
+        local addr = pointers.current_foe + (i - 1) * _MON_BYTE_LENGTH
+        local pid = mdword(addr)
+        local checksum = mword(addr + 6)
+
+        if pid == 0 or checksum == 0 then
+            return nil
+        end
+
+        table.insert(parts, string.format("%08X:%04X", pid, checksum))
+    end
+
+    return table.concat(parts, "|")
 end
 
 --- Attempts to read the foe(s) data from memory
@@ -54,50 +86,66 @@ function update_foes()
 
     if not game_state.in_game or (battle_value ~= 0x41 and battle_value ~= 0x97 and battle_value ~= 0xC0) then
         foe = nil
+        foe_key = nil
         return
     end
 
-    -- If the foe is already known, then don't re-read it within the same battle
-    if foe then
+    local current_key = get_current_foe_key()
+
+    if not current_key then
+        foe = nil
+        foe_key = nil
         return
     end
 
-    local function attempt_fetch()
-        local foe_count = mbyte(pointers.foe_count)
-        
-        if foe_count == 0 then
-            print_debug("Foe data doesn't exist yet, retrying next frame...")
-            return
-        end
-
-        local foe_table = {}
-
-        for i = 1, foe_count do
-            local mon_data = pokemon.read_data(pointers.current_foe + (i - 1) * _MON_BYTE_LENGTH)
-            
-            if mon_data then
-                local mon = pokemon.parse_data(mon_data, true)
-                
-                table.insert(foe_table, mon)
-            else
-                print_debug("Foe checksum failed at slot " .. i .. ", retrying next frame...")
-                return
-            end
-        end
-
-        foe = foe_table
+    -- If the foe key is unchanged, keep the cached foe.
+    if foe and foe_key == current_key then
+        return
     end
 
-    -- Attempt to identify the foe once per frame until it succeeds
-    while foe == nil do
-        -- Exit in case the bot SR'ed during this stage
-        if not game_state.in_game then
-            return
+    -- Wait until foe memory is stable before reading.
+    -- This helps avoid reading stale battle-transition data.
+    local stable_frames = 0
+    local last_key = current_key
+    local timeout = 0
+
+    while stable_frames < 20 and timeout < 180 do
+        local new_key = get_current_foe_key()
+
+        if new_key and new_key == last_key then
+            stable_frames = stable_frames + 1
+        else
+            stable_frames = 0
+            last_key = new_key
         end
 
-        attempt_fetch()
         emu.frameadvance()
+        timeout = timeout + 1
     end
+
+    if not last_key then
+        return
+    end
+
+    local foe_count = mbyte(pointers.foe_count)
+    local foe_table = {}
+
+    for i = 1, foe_count do
+        local mon_data = pokemon.read_data(pointers.current_foe + (i - 1) * _MON_BYTE_LENGTH)
+
+        if mon_data then
+            local mon = pokemon.parse_data(mon_data, true)
+            table.insert(foe_table, mon)
+        else
+            print_debug("Foe checksum failed at slot " .. i .. ", retrying next frame...")
+            foe = nil
+            foe_key = nil
+            return
+        end
+    end
+
+    foe = foe_table
+    foe_key = last_key
 end
 
 --- Converts an unsigned 32-bit int to a signed 16-bit int
